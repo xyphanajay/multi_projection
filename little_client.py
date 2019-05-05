@@ -2,6 +2,8 @@ from socket import AF_INET, socket, SOCK_STREAM, SHUT_WR
 from tkinter import *
 import subprocess
 import time
+import atexit
+from pathlib import Path
 
 host = input("ip addr: ")
 port = input("port no: ")
@@ -17,12 +19,15 @@ print("connected(check)")
 c_sock.send(bytes("client", "utf8"))
 
 def rec():
+	flag = 0
 	while True:
 		try:
 			print("waiting for msg...")
-			msg = c_sock.recv(buff).decode("utf8")
-			
-			if msg:
+			if flag == 0:
+				msg = c_sock.recv(buff).decode("utf8")
+			else:
+				msg = c_sock.recv(buff)
+			if msg and flag == 0:
 				print("Display ~> " + msg)
 				subprocess.run(["notify-send", msg])
 				#display(msg)
@@ -31,30 +36,47 @@ def rec():
 				c_sock.close()
 				break
 				
-			if msg == "quit":
+			if msg == "quit" and flag == 0:
 				print("breaking out")
 				c_sock.shutdown(SHUT_WR)
 				#c_sock.close()
 				#break
 			if msg == "file":
-				name = c_sock.recv(buff).decode("utf8")
-				f = open(name, 'wb')
-				data = c_sock.recv(buff)
-				print("data = ", (data))
-				if not data:
-					break
-				f.write(data)
-				f.close()
-				subprocess.run(["xdg-open", name])
-				c_sock.close()
-				break
+				#flag = 1
+				i = 0
+				info = c_sock.recv(buff).decode("utf8")
+				info = info.split("#")
+				name = info[0]
+				size = int(info[1])
+				#size = int(c_sock.recv(buff).decode("utf8"))
+				print("File receiving...")
+				print("Name: " + name + "\nSize: " + str(size))
+				if name != "fail":
+					name = file_check(name)
+					f = open(name, 'wb')
+					while size:
+						size -= 1
+						data = c_sock.recv(buff)
+						#print("data = ", (data))
+						i += 1
+						print("receiving..." + str(i))
+						if not data:
+							break
+						f.write(data)
+					f.close()
+					subprocess.run(["xdg-open", name])
+					c_sock.close()
+					#break
+				else:
+					print("Error: File not received!")
+					subprocess.run(["notify-send", "error: no file"])
 		except OSError:
 			print("error")
 			c_sock.shutdown(SHUT_WR)
 			c_sock.close()
 			break
 			
-def display(msg):
+def display(msg):								# not working right now
 	print(msg)
 	root = Tk()
 	root.overrideredirect(True)
@@ -63,5 +85,24 @@ def display(msg):
 	w.pack()
 	root.mainloop()
 
+def file_check(name, i = 1):
+	my_file = Path("./" + name)
+	if my_file.is_file():
+		name = file_check(ren(name))
+	return name
+
+def ren(name):
+	rn = ""
+	part = name.split(".")
+	extn = part[len(part) - 1]
+	for p in part:
+		if p != extn:
+			rn += p
+	rn = rn + "x." + extn
+	return rn			
+
+def end_game():
+	c_sock.close()
 
 rec()
+atexit.register(end_game)

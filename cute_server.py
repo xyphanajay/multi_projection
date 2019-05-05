@@ -5,7 +5,10 @@ import atexit
 import time
 
 clients = {}
+senders = {}
 addrs = {}
+sender_add = {}
+
 
 host = ''
 port = 5050
@@ -20,41 +23,69 @@ server.listen(5)
 
 def incoming():
 	i = 0
+	j = 0
 	while True:
-		print("#"*20 + "\nLooking for connections...")
-		client, client_addr = server.accept()
+		print("#"*30 + "\nLooking for connections...")
+		client, client_addr = server.accept()								# waiting for connections
 		print("%s:%s is running..." % client_addr)
 		client.send(bytes("hello, you are live.", "utf8"))
-		#srvr = input("is it server? (y/n)")
-		check = client.recv(buff).decode("utf8")
-		print("got this ... " + check)
+		
+		check = client.recv(buff).decode("utf8")							# receiving sender or reciever text for classification
+		print("Connected a " + check)
 		if check == "server":
 			print("server up!")
-			#addrs[client] = client_addr
-			Thread(target = handle_client, args = (client,)).start()
-			print("Thread started!")
-			break
+			sender_add[client] = client_addr								# saving connected senders addr and info in sender_add[]
+			j += 1
+			senders[client] = "sender_" + str(j)							# save senders in list senders[]
+			Thread(target = handle_client, args = (client,)).start()		# create THREAD to handle senders
+			print("server list updated:")									# Print sender list
+			for x in senders:
+				print(senders[x])
 		else:
 			print("client up!")
-			addrs[client] = client_addr
+			addrs[client] = client_addr										# saving connected client addr and info in addrs[]
 			i += 1
-			clients[client] = "user_" + str(i)
-			print("client list updated:")
+			clients[client] = "user_" + str(i)								# save clients in clients[] list
+			print("client list updated:")									# print clients list
 			for x in clients:
 				print(clients[x])
 			
-def handle_client(client):
+def handle_client(client):													# thread to handle senders
 	print("Sender Server: ")
+	f_flag = 0			#flag for file
+	s_flag = 0			#flag for self
+	self_options = "1. for client list(type-> clients)\n2. for sender list(type-> senders)\n3. back to sending(type-> back)\n"
 	while True:
 		print("Threadx ~> waiting for msg...")
-		msg = client.recv(buff)
-		print("Threadx ~> sending - " + msg.decode("utf8"))
-		
-		broadcast(msg)
-		if msg.decode("utf8") == "quit":
-			print("closing server(check)")
+		raw_msg = client.recv(buff)
+		if raw_msg.decode("utf8") == "file":
+			broadcast(raw_msg)					# send file as text 
+			broadcast(client.recv(buff))		# send file name as text
+			#broadcast(client.recv(buff))		# send size of file
+			#f_flag = 1
+			while True:
+				data = client.recv(buff)
+				#print("data = ", (data))
+				print("receiving...")
+				if not data:
+					break
+				file_bc(data)
+		"""if raw_msg.decode("utf8") == "self":
+			s_flag = 1
+		if f_flag == 0:
+			print("Threadx~>sendg(shwn is decoded)- " + raw_msg.decode("utf8"))
+		else:
+			print("Sending file...")
+		if s_flag == 0:
+			broadcast(raw_msg)
+		else:
+			pass# work on sending info to naughty about connected senders or receivers using ---> self_options"""
+		broadcast(raw_msg)
+		if raw_msg.decode("utf8") == "quit":
+			print("server closing")
+			print(senders[client])
 			client.close()
-			for x in clients:
+			"""for x in clients:
 				x.shutdown(SHUT_WR)
 				x.close()
 				del clients[x]
@@ -62,18 +93,32 @@ def handle_client(client):
 			server.shutdown(SHUT_WR)
 			server.close()
 			print("connection dropped(check)")
-			break	
-			
+			break"""	
+
+"""
+File "cute_server.py", line 57, in handle_client
+    for x in clients:
+RuntimeError: dictionary changed size during iteration	
+"""
 		
-def broadcast(msg):
+def broadcast(raw_msg):
 	for sock in clients:
-			sent = sock.send(bytes(msg))
-			if sent == 0:
-				raise RuntimeError(clients[sock] + ">> socket conn broken")
-				del clients[sock]
+		sent = sock.send(bytes(raw_msg))							# why bytes here!
+		if sent == 0:
+			raise RuntimeError(clients[sock] + ">> socket conn broken")
+			del clients[sock]
+			
+def file_bc(data):
+	for sock in clients:
+		sent = sock.send(data)
+		if sent == 0:
+			raise RuntimeError(clients[sock] + ">> socket conn broken")
+			del clients[sock]
 			
 def end_game():
-	server.close()
+	#for x in clients:
+	#			x.close()
+	#server.close()
 	print("Game Over! h4x0r :-)")
 	
 
