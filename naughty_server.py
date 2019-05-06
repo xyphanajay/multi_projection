@@ -56,7 +56,7 @@ def send():
 					#c_sock.close()
 					#break
 				else:
-					c_sock.send(bytes("fail", "utf8"))
+					c_sock.send(bytes("fail#0", "utf8"))
 					print("Error: File not found!\nGoing back to text send mode.")
 				c_sock.send(bytes("", "utf8"))
 					

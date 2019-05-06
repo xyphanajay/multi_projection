@@ -4,6 +4,7 @@ import subprocess
 import time
 import atexit
 from pathlib import Path
+from threading import Thread
 
 host = input("ip addr: ")
 port = input("port no: ")
@@ -23,10 +24,12 @@ def rec():
 	while True:
 		try:
 			print("waiting for msg...")
-			if flag == 0:
-				msg = c_sock.recv(buff).decode("utf8")
+			msg = ""
+			msg = c_sock.recv(buff).decode("utf8")
+			"""if flag == 0:
+				msg = raw_msg.decode("utf8")
 			else:
-				msg = c_sock.recv(buff)
+				msg = raw_msg"""
 			if msg and flag == 0:
 				print("Display ~> " + msg)
 				subprocess.run(["notify-send", msg])
@@ -44,6 +47,7 @@ def rec():
 			if msg == "file":
 				#flag = 1
 				i = 0
+				info = ""
 				info = c_sock.recv(buff).decode("utf8")
 				info = info.split("#")
 				name = info[0]
@@ -56,16 +60,18 @@ def rec():
 					f = open(name, 'wb')
 					while size:
 						size -= 1
+						data =""
 						data = c_sock.recv(buff)
 						#print("data = ", (data))
 						i += 1
-						print("receiving..." + str(i))
+						print("receiving..." + str(i) + "...left..." + str(size))
 						if not data:
 							break
 						f.write(data)
 					f.close()
-					subprocess.run(["xdg-open", name])
-					c_sock.close()
+					Thread(target = open_file, args = (name,)).start()			# opening file using threads
+					
+					#c_sock.close()
 					#break
 				else:
 					print("Error: File not received!")
@@ -100,6 +106,9 @@ def ren(name):
 			rn += p
 	rn = rn + "x." + extn
 	return rn			
+
+def open_file(name):
+	subprocess.run(["xdg-open", name])
 
 def end_game():
 	c_sock.close()

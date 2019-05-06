@@ -29,7 +29,7 @@ def incoming():
 		client, client_addr = server.accept()								# waiting for connections
 		print("%s:%s is running..." % client_addr)
 		client.send(bytes("hello, you are live.", "utf8"))
-		
+		check = ""
 		check = client.recv(buff).decode("utf8")							# receiving sender or reciever text for classification
 		print("Connected a " + check)
 		if check == "server":
@@ -56,35 +56,42 @@ def handle_client(client):													# thread to handle senders
 	s_flag = 0			#flag for self
 	self_options = "1. for client list(type-> clients)\n2. for sender list(type-> senders)\n3. back to sending(type-> back)\n"
 	while True:
-		print("Threadx ~> waiting for msg...")
-		raw_msg = client.recv(buff)
-		if raw_msg.decode("utf8") == "file":
-			broadcast(raw_msg)					# send file as text 
-			broadcast(client.recv(buff))		# send file name as text
-			#broadcast(client.recv(buff))		# send size of file
-			#f_flag = 1
-			while True:
-				data = client.recv(buff)
-				#print("data = ", (data))
-				print("receiving...")
-				if not data:
-					break
-				file_bc(data)
-		"""if raw_msg.decode("utf8") == "self":
-			s_flag = 1
-		if f_flag == 0:
-			print("Threadx~>sendg(shwn is decoded)- " + raw_msg.decode("utf8"))
-		else:
-			print("Sending file...")
-		if s_flag == 0:
+		try:
+			raw_msg = ""
+			print("Threadx ~> waiting for msg...")
+			raw_msg = client.recv(buff)
+			print(raw_msg.decode("utf8"))
+			if raw_msg.decode("utf8") == "file":
+				broadcast(raw_msg)					# send file as text 
+				raw_msg = ""
+				raw_msg = client.recv(buff)
+				broadcast(raw_msg)		# send file name and size as text
+				info = ""
+				info = raw_msg.decode("utf8").split("#")
+				size = int(info[1])
+				#broadcast(client.recv(buff))		# send size of file
+				#f_flag = 1
+				while size:
+					size -= 1
+					data = ""
+					data = client.recv(buff)
+					#print("data = ", (data))
+					print("receiving..." + str(size))
+					if not data:
+						break
+					file_bc(data)
+		
+			
 			broadcast(raw_msg)
-		else:
-			pass# work on sending info to naughty about connected senders or receivers using ---> self_options"""
-		broadcast(raw_msg)
-		if raw_msg.decode("utf8") == "quit":
-			print("server closing")
-			print(senders[client])
+			if raw_msg.decode("utf8") == "quit":
+				print("server closing")
+				print(senders[client])
+				client.close()
+		except OSError:
+			print("disconnecting akf sender: " + senders[client])
 			client.close()
+			del senders[client]
+			
 			"""for x in clients:
 				x.shutdown(SHUT_WR)
 				x.close()
@@ -110,9 +117,16 @@ def broadcast(raw_msg):
 			
 def file_bc(data):
 	for sock in clients:
-		sent = sock.send(data)
-		if sent == 0:
-			raise RuntimeError(clients[sock] + ">> socket conn broken")
+		try:
+			sent = sock.send(data)
+			if sent == 0:
+				raise RuntimeError(clients[sock] + ">> socket conn broken <<")
+				print("### removing afk - " + clients[sock])
+				sock.close()
+				del clients[sock]
+		except OSError:
+			print("removing afk - " + clients[sock])
+			sock.close()
 			del clients[sock]
 			
 def end_game():
