@@ -5,7 +5,6 @@ import atexit
 from pathlib import Path
 
 
-
 host = input("server ip: ")
 port = input("port no: ")
 

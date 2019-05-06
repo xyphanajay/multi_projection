@@ -1,5 +1,6 @@
 from socket import AF_INET, socket, SOCK_STREAM, SHUT_WR
-from tkinter import *
+import modules.file_handle as dealer
+import modules.os_detect as detect
 import subprocess
 import time
 import atexit
@@ -12,6 +13,9 @@ port = input("port no: ")
 buff = 1024
 addr = (host, int(port))
 
+os = detect.check_os()                       # check os present
+txt = "text"
+fi = "file"
 
 print("connecting... " + str(addr))
 c_sock = socket(AF_INET, SOCK_STREAM)
@@ -26,14 +30,11 @@ def rec():
 			print("waiting for msg...")
 			msg = ""
 			msg = c_sock.recv(buff).decode("utf8")
-			"""if flag == 0:
-				msg = raw_msg.decode("utf8")
-			else:
-				msg = raw_msg"""
 			if msg and flag == 0:
 				print("Display ~> " + msg)
-				subprocess.run(["notify-send", msg])
+				#subprocess.run(["notify-send", msg])
 				#display(msg)
+				dealer.open_file(msg, os, txt)
 			elif msg == '':
 				raise RuntimeError("socket conn broken")
 				c_sock.close()
@@ -69,20 +70,21 @@ def rec():
 							break
 						f.write(data)
 					f.close()
-					Thread(target = open_file, args = (name,)).start()			# opening file using threads
-					
+					#Thread(target = open_file, args = (name,)).start()			# opening file using threads
+					dealer.open_file(name, os, fi)
 					#c_sock.close()
 					#break
 				else:
 					print("Error: File not received!")
-					subprocess.run(["notify-send", "error: no file"])
+					#subprocess.run(["notify-send", "error: no file"])
+					dealer.open_file("error: no file", os, txt)
 		except OSError:
 			print("error")
 			c_sock.shutdown(SHUT_WR)
 			c_sock.close()
 			break
 			
-def display(msg):								# not working right now
+"""def display(msg):								# not working right now
 	print(msg)
 	root = Tk()
 	root.overrideredirect(True)
@@ -90,7 +92,7 @@ def display(msg):								# not working right now
 	w = Label(root, text = "This is test.")
 	w.pack()
 	root.mainloop()
-
+"""
 def file_check(name, i = 1):
 	my_file = Path("./" + name)
 	if my_file.is_file():
@@ -106,10 +108,11 @@ def ren(name):
 			rn += p
 	rn = rn + "x." + extn
 	return rn			
-
+"""
 def open_file(name):
-	subprocess.run(["xdg-open", name])
-
+	#subprocess.run(["xdg-open", name])
+        subprocess.Popen('powershell.exe start ' + name)                # FOR WINDOWS
+"""
 def end_game():
 	c_sock.close()
 
