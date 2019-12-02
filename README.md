@@ -24,7 +24,7 @@ How to set up the project repo to use.
 4. Run start.py file using python3
 > python3 start.py
 
-#### Instructions for server
+### Instructions for server
 1. Click on server button on main panel
 2. Provide port number on which you want to start listening
 3. GUI will provide you connected client info.
