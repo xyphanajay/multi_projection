@@ -1,8 +1,8 @@
-## Multi-Projection BTP
-# Under mentorship of Dr. Rajbir Kaur
+# Multi-Projection BTP
+### Under mentorship of Dr. Rajbir Kaur
 LNMIIT, Jaipur
 
-# Requirements
+## Requirements
 * python3
 > sudo apt install python3
 * tkinter
@@ -15,7 +15,7 @@ LNMIIT, Jaipur
 ## Instructions
 How to set up the project repo to use.
 
-# Basic Instructions
+### Basic Instructions
 1. Clone repo
 > git clone https://github.com/xyphanajay/multi_projection.git
 2. Install all the required packages
@@ -24,12 +24,12 @@ How to set up the project repo to use.
 4. Run start.py file using python3
 > python3 start.py
 
-# Instructions for server
+#### Instructions for server
 1. Click on server button on main panel
 2. Provide port number on which you want to start listening
 3. GUI will provide you connected client info.
 
-# Instructions for sender
+### Instructions for sender
 1. Click on Sender button on main panel
 2. Provide IP address and port number of the server
 3. Mode of broadcasts:
@@ -38,10 +38,13 @@ How to set up the project repo to use.
 	* File with Low priority
 4. Quit to close the sender portal
 
-# Instructions for projector client
+### Instructions for projector client
 1. Click on Projection button on main panel
 2, Provide IP and port of the server
 3. Wait for messages and files
 4. Low priority files will be displayed in *Mailbox*
 
+### Demo
 
+![Multi-Projection](Testing.png)
+Format: ![Alt Text](Testing.png)
