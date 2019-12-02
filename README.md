@@ -47,4 +47,3 @@ How to set up the project repo to use.
 ### Demo
 
 ![Multi-Projection](Testing.png)
-Format: ![Alt Text](Testing.png)
