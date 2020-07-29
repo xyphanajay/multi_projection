@@ -4,7 +4,7 @@ import subprocess
 import atexit
 import time
 import sys
-from progress.bar import Bar
+# from progress.bar import Bar
 # from modules.tk import ser, update_ser, rem_client
 # from tkinter import *
 import os
