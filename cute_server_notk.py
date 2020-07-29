@@ -108,16 +108,15 @@ def file_proc(raw, client):
 	if name == "fail":
 		print("Error: File not received! Contact Adminstrator.")
 		return 0
-	with Bar('processing file', max = size) as bar:
-		while size:
-			size -=1
-			data = ""
-			data = client.recv(buff)
-			if not data:
-				file_bc(data)
-				break
+	
+	while size:
+		size -=1
+		data = ""
+		data = client.recv(buff)
+		if not data:
 			file_bc(data)
-			bar.next()
+			break
+		file_bc(data)
 			
 		
 def broadcast(raw_msg):
